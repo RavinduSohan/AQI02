@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AirQualityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Models\AdditionalAirQualityReading;
 
 // Public routes
 Route::get('/', function () {
@@ -88,3 +89,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/users', [NotificationController::class, 'getUsers']);
 });
 Route::get('/notifications', [NotificationController::class, 'getNotifications']);
+
+// API Routes
+Route::get('/api/air-quality-readings', [AirQualityController::class, 'getReadings']);
+Route::get('/api/additional-air-quality-readings', function () {
+    return AdditionalAirQualityReading::with('airQualityReading')
+        ->orderBy('reading_time', 'desc')
+        ->take(30)
+        ->get();
+});

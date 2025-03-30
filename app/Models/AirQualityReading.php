@@ -21,4 +21,12 @@ class AirQualityReading extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8'
     ];
+
+    /**
+     * Get the additional air quality reading data associated with this reading.
+     */
+    public function additionalData()
+    {
+        return $this->hasOne(AdditionalAirQualityReading::class);
+    }
 } 

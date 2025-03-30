@@ -56,7 +56,7 @@
                     <label class="inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="dataToggle" class="sr-only peer">
                         <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                        <span class="ms-3 text-sm font-medium text-gray-900">Use Mock Data</span>
+                        <span class="ms-3 text-sm font-medium text-gray-900 peer-checked:text-gray-900">Sensors Activated</span>
                     </label>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -99,6 +99,73 @@
                     <h2 class="text-xl font-semibold mb-4">AQI Levels Over Time</h2>
                     <div class="chart-container">
                         <canvas id="areaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Air Quality Parameters Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <!-- Pollutants Line Chart -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Major Pollutants Trends</h2>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="pollutant-toggle sr-only peer" data-pollutant="all" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">All</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="pollutant-toggle sr-only peer" data-pollutant="co" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">CO</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="pollutant-toggle sr-only peer" data-pollutant="no2" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">NO₂</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="pollutant-toggle sr-only peer" data-pollutant="o3" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">O₃</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="pollutant-toggle sr-only peer" data-pollutant="so2" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">SO₂</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pollutantsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Particulate Matter Bar Chart -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Particulate Matter Levels</h2>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="particulate-toggle sr-only peer" data-particulate="all" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">All</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="particulate-toggle sr-only peer" data-particulate="pm10" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">PM10</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="particulate-toggle sr-only peer" data-particulate="pm25" checked>
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ms-3 text-sm font-medium text-gray-900">PM2.5</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="particulateChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -149,6 +216,29 @@
             }
 
             return mockData;
+        }
+
+        function generateMockAdditionalData(timeRange = 'day') {
+            const now = new Date();
+            const mockData = [];
+            const intervals = timeRange === 'day' ? 24 : 30;
+            const timeStep = timeRange === 'day' ? 3600000 : 86400000;
+
+            for (let i = 0; i < intervals; i++) {
+                const time = new Date(now - i * timeStep);
+                // Generate realistic but random values for each pollutant
+                mockData.push({
+                    reading_time: time.toISOString(),
+                    co: (Math.random() * 4 + 1).toFixed(2),  // 1-5 ppm
+                    no2: (Math.random() * 0.1 + 0.01).toFixed(2), // 0.01-0.11 ppm
+                    o3: (Math.random() * 0.07 + 0.02).toFixed(2), // 0.02-0.09 ppm
+                    so2: (Math.random() * 0.1 + 0.01).toFixed(2), // 0.01-0.11 ppm
+                    pm10: (Math.random() * 100 + 20).toFixed(2), // 20-120 µg/m³
+                    pm25: (Math.random() * 50 + 10).toFixed(2)  // 10-60 µg/m³
+                });
+            }
+
+            return mockData.sort((a, b) => new Date(a.reading_time) - new Date(b.reading_time));
         }
 
         function createLineChart(data, timeRange = 'day') {
@@ -406,21 +496,198 @@
             });
         }
 
-        function updateCharts(data, timeRange = 'day') {
-            createLineChart(data, timeRange);
-            createBarChart(data, timeRange);
-            createPieChart(data, timeRange);
-            createAreaChart(data, timeRange);
+        function createPollutantsChart(data, timeRange = 'day') {
+            const ctx = document.getElementById('pollutantsChart').getContext('2d');
+            
+            const timeLabels = data.map(item => {
+                const date = new Date(item.reading_time);
+                return timeRange === 'day'
+                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            });
+
+            const pollutants = {
+                co: { label: 'CO (ppm)', color: '#FF6384' },
+                no2: { label: 'NO₂ (ppm)', color: '#36A2EB' },
+                o3: { label: 'O₃ (ppm)', color: '#FFCE56' },
+                so2: { label: 'SO₂ (ppm)', color: '#4BC0C0' }
+            };
+
+            // Get current visibility states from checkboxes
+            const visibilityStates = {};
+            Object.keys(pollutants).forEach(key => {
+                const checkbox = $(`.pollutant-toggle[data-pollutant="${key}"]`);
+                visibilityStates[key] = checkbox.length ? checkbox.prop('checked') : true;
+            });
+
+            const datasets = Object.entries(pollutants).map(([key, info]) => ({
+                label: info.label,
+                data: data.map(d => d[key]),
+                borderColor: info.color,
+                backgroundColor: info.color,
+                fill: false,
+                tension: timeRange === 'month' ? 0.4 : 0,
+                hidden: !visibilityStates[key]
+            }));
+
+            if (charts.pollutantsChart) {
+                charts.pollutantsChart.destroy();
+            }
+
+            charts.pollutantsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Concentration'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: timeRange === 'day' ? 'Time (24 Hours)' : 'Date (30 Days)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Major Pollutants Trends (${timeRange === 'day' ? '24 Hours' : '30 Days'})`
+                        },
+                        legend: {
+                            display: true,
+                            onClick: null // Disable default legend click behavior
+                        }
+                    }
+                }
+            });
+        }
+
+        function createParticulateChart(data, timeRange = 'day') {
+            const ctx = document.getElementById('particulateChart').getContext('2d');
+            
+            const timeLabels = data.map(item => {
+                const date = new Date(item.reading_time);
+                return timeRange === 'day'
+                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            });
+
+            // Get current visibility states from checkboxes
+            const visibilityStates = {
+                pm10: $('.particulate-toggle[data-particulate="pm10"]').prop('checked'),
+                pm25: $('.particulate-toggle[data-particulate="pm25"]').prop('checked')
+            };
+
+            const datasets = [
+                {
+                    label: 'PM10 (µg/m³)',
+                    data: data.map(d => d.pm10),
+                    backgroundColor: '#FF9F40',
+                    borderColor: '#FF9F40',
+                    borderWidth: 1,
+                    hidden: !visibilityStates.pm10
+                },
+                {
+                    label: 'PM2.5 (µg/m³)',
+                    data: data.map(d => d.pm25),
+                    backgroundColor: '#4BC0C0',
+                    borderColor: '#4BC0C0',
+                    borderWidth: 1,
+                    hidden: !visibilityStates.pm25
+                }
+            ];
+
+            if (charts.particulateChart) {
+                charts.particulateChart.destroy();
+            }
+
+            charts.particulateChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: timeLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Concentration (µg/m³)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: timeRange === 'day' ? 'Time (24 Hours)' : 'Date (30 Days)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Particulate Matter Levels (${timeRange === 'day' ? '24 Hours' : '30 Days'})`
+                        },
+                        legend: {
+                            display: true,
+                            onClick: null // Disable default legend click behavior
+                        }
+                    }
+                }
+            });
+        }
+
+        async function updateCharts(timeRange = 'day') {
+            let aqiData;
+            let additionalData;
+
+            if (useMockData) {
+                aqiData = generateMockData(timeRange);
+                additionalData = generateMockAdditionalData(timeRange);
+            } else {
+                try {
+                    // Fetch AQI data for original charts
+                    const aqiResponse = await fetch('/get-readings');
+                    const aqiResult = await aqiResponse.json();
+                    aqiData = Object.values(aqiResult).flat();
+                    
+                    // Fetch additional data for new charts
+                    const additionalResponse = await fetch('/api/additional-air-quality-readings');
+                    additionalData = await additionalResponse.json();
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    return;
+                }
+            }
+
+            // Update original charts with AQI data
+            createLineChart(aqiData, timeRange);
+            createBarChart(aqiData, timeRange);
+            createPieChart(aqiData, timeRange);
+            createAreaChart(aqiData, timeRange);
+
+            // Update new charts with additional data
+            createPollutantsChart(additionalData, timeRange);
+            createParticulateChart(additionalData, timeRange);
         }
 
         function updateData() {
             if (useMockData) {
-                const mockData = generateMockData();
-                updateCharts(mockData);
+                updateCharts();
             } else {
-                $.get('/get-readings', function(data) {
-                    updateCharts(Object.values(data).flat());
-                });
+                updateCharts('day');
             }
         }
 
@@ -437,8 +704,7 @@
                 }
 
                 const timeRange = $(this).val();
-                const mockData = generateMockData(timeRange);
-                updateCharts(mockData, timeRange);
+                updateCharts(timeRange);
             });
 
             // Handle mock data toggle
@@ -449,29 +715,76 @@
                 // Enable/disable time range selector
                 $('#globalTimeRange').prop('disabled', !useMockData);
                 
+                // Update label text
+                $(this).next().next().text(useMockData ? 'Sensors Deactivated' : 'Sensors Activated');
+                
                 if (useMockData) {
-                    const mockData = generateMockData(timeRange);
-                    updateCharts(mockData, timeRange);
+                    updateCharts(timeRange);
                 } else {
                     $('#globalTimeRange').val('day');
-                    $.get('/get-readings', function(data) {
-                        updateCharts(Object.values(data).flat(), 'day');
-                    });
+                    updateCharts('day');
                 }
             });
 
             // Update every minute
             setInterval(function() {
                 const timeRange = $('#globalTimeRange').val();
-                if (useMockData) {
-                    const mockData = generateMockData(timeRange);
-                    updateCharts(mockData, timeRange);
-                } else {
-                    $.get('/get-readings', function(data) {
-                        updateCharts(Object.values(data).flat(), 'day');
-                    });
-                }
+                updateCharts(timeRange);
             }, 60 * 1000);
+
+            // Handle pollutant toggles
+            $('.pollutant-toggle').change(function() {
+                const pollutant = $(this).data('pollutant');
+                
+                if (pollutant === 'all') {
+                    // Toggle all checkboxes
+                    const isChecked = $(this).prop('checked');
+                    $('.pollutant-toggle').prop('checked', isChecked);
+                } else {
+                    // Update "All" checkbox state
+                    const allChecked = $('.pollutant-toggle:not([data-pollutant="all"])').toArray().every(cb => cb.checked);
+                    $('.pollutant-toggle[data-pollutant="all"]').prop('checked', allChecked);
+                }
+                
+                // Recreate chart with current visibility states
+                const timeRange = $('#globalTimeRange').val();
+                if (useMockData) {
+                    const mockData = generateMockAdditionalData(timeRange);
+                    createPollutantsChart(mockData, timeRange);
+                } else {
+                    fetch('/api/additional-air-quality-readings')
+                        .then(response => response.json())
+                        .then(data => createPollutantsChart(data, timeRange))
+                        .catch(error => console.error('Error fetching data:', error));
+                }
+            });
+
+            // Handle particulate matter toggles
+            $('.particulate-toggle').change(function() {
+                const particulate = $(this).data('particulate');
+                
+                if (particulate === 'all') {
+                    // Toggle all checkboxes
+                    const isChecked = $(this).prop('checked');
+                    $('.particulate-toggle').prop('checked', isChecked);
+                } else {
+                    // Update "All" checkbox state
+                    const allChecked = $('.particulate-toggle:not([data-particulate="all"])').toArray().every(cb => cb.checked);
+                    $('.particulate-toggle[data-particulate="all"]').prop('checked', allChecked);
+                }
+                
+                // Recreate chart with current visibility states
+                const timeRange = $('#globalTimeRange').val();
+                if (useMockData) {
+                    const mockData = generateMockAdditionalData(timeRange);
+                    createParticulateChart(mockData, timeRange);
+                } else {
+                    fetch('/api/additional-air-quality-readings')
+                        .then(response => response.json())
+                        .then(data => createParticulateChart(data, timeRange))
+                        .catch(error => console.error('Error fetching data:', error));
+                }
+            });
         });
     </script>
 </body>
