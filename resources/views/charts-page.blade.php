@@ -51,19 +51,28 @@
     <div class="container mx-auto px-4 py-8">
         <div class="max-w-6xl mx-auto space-y-6">
             <!-- Data Source Toggle -->
-            <div class="flex justify-end mb-4">
-                <label class="inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="dataToggle" class="sr-only peer">
-                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                    <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Use Mock Data</span>
-                </label>
+            <div class="flex justify-end mb-4 space-x-8">
+                <div class="flex items-center space-x-4">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="dataToggle" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        <span class="ms-3 text-sm font-medium text-gray-900">Use Mock Data</span>
+                    </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-900">Time Range:</span>
+                    <select id="globalTimeRange" class="text-sm border rounded-md px-2 py-1" disabled>
+                        <option value="day">24 Hours</option>
+                        <option value="month">30 Days</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Charts Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Line Chart -->
                 <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
-                    <h2 class="text-xl font-semibold mb-4">24-Hour AQI Trends</h2>
+                    <h2 class="text-xl font-semibold mb-4">AQI Trends</h2>
                     <div class="chart-container">
                         <canvas id="lineChart"></canvas>
                     </div>
@@ -109,7 +118,7 @@
             return '#800080';
         }
 
-        function generateMockData() {
+        function generateMockData(timeRange = 'day') {
             const locationCoords = {
                 'Colombo': { lat: 6.9271, lng: 79.8612 },
                 'Nugegoda': { lat: 6.8649, lng: 79.8997 },
@@ -119,12 +128,19 @@
             const mockData = [];
             const now = new Date();
             
-            for (let i = 0; i < 24; i++) {
+            const intervals = timeRange === 'day' ? 24 : 30; // 24 hours or 30 days
+            const timeStep = timeRange === 'day' ? 3600000 : 86400000; // 1 hour or 1 day in milliseconds
+            
+            for (let i = 0; i < intervals; i++) {
                 Object.entries(locationCoords).forEach(([location, coords]) => {
-                    const time = new Date(now - i * 3600000);
+                    const time = new Date(now - i * timeStep);
+                    // Add some variation to make the monthly data look more realistic
+                    const baseAQI = Math.floor(Math.random() * 100) + 50;
+                    const variation = timeRange === 'month' ? Math.sin(i / 3) * 20 : 0; // Add sinusoidal variation for monthly data
+                    
                     mockData.push({
                         location: location,
-                        aqi: Math.floor(Math.random() * 150) + 50,
+                        aqi: Math.max(0, Math.min(500, Math.floor(baseAQI + variation))),
                         reading_time: time.toISOString(),
                         latitude: coords.lat,
                         longitude: coords.lng
@@ -135,20 +151,27 @@
             return mockData;
         }
 
-        function createLineChart(data) {
+        function createLineChart(data, timeRange = 'day') {
             const ctx = document.getElementById('lineChart').getContext('2d');
             const locations = [...new Set(data.map(item => item.location))];
-            const timeLabels = [...new Set(data.map(item => 
-                new Date(item.reading_time).toLocaleTimeString()
-            ))].sort();
+            
+            // Format time labels based on the time range
+            const timeLabels = [...new Set(data.map(item => {
+                const date = new Date(item.reading_time);
+                return timeRange === 'day' 
+                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }))].sort();
 
             const datasets = locations.map(location => {
-                const locationData = data.filter(d => d.location === location);
+                const locationData = data.filter(d => d.location === location)
+                    .sort((a, b) => new Date(a.reading_time) - new Date(b.reading_time));
                 return {
                     label: location,
                     data: locationData.map(d => d.aqi),
                     borderColor: getAQIColor(locationData[0].aqi),
-                    fill: false
+                    fill: false,
+                    tension: timeRange === 'month' ? 0.4 : 0 // Add slight curve for monthly view
                 };
             });
 
@@ -172,23 +195,59 @@
                                 display: true,
                                 text: 'AQI Value'
                             }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: timeRange === 'day' ? 'Time (24 Hours)' : 'Date (30 Days)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: timeRange === 'day' ? '24-Hour AQI Trends' : '30-Day AQI Trends'
                         }
                     }
                 }
             });
         }
 
-        function createBarChart(data) {
+        function createBarChart(data, timeRange = 'day') {
             const ctx = document.getElementById('barChart').getContext('2d');
             const locations = [...new Set(data.map(item => item.location))];
-            const averageAQI = locations.map(location => {
-                const locationData = data.filter(d => d.location === location);
-                const avg = locationData.reduce((sum, curr) => sum + curr.aqi, 0) / locationData.length;
-                return {
+            
+            let averageAQI;
+            if (timeRange === 'day') {
+                // For daily view, show hourly averages
+                averageAQI = locations.map(location => {
+                    const locationData = data.filter(d => d.location === location);
+                    const avg = locationData.reduce((sum, curr) => sum + curr.aqi, 0) / locationData.length;
+                    return {
+                        location: location,
+                        aqi: Math.round(avg)
+                    };
+                });
+            } else {
+                // For monthly view, show daily trends
+                const daysData = {};
+                locations.forEach(location => {
+                    daysData[location] = new Array(30).fill(0);
+                });
+
+                data.forEach(reading => {
+                    const date = new Date(reading.reading_time);
+                    const dayIndex = Math.floor((Date.now() - date) / (24 * 60 * 60 * 1000));
+                    if (dayIndex < 30) {
+                        daysData[reading.location][dayIndex] = reading.aqi;
+                    }
+                });
+
+                averageAQI = locations.map(location => ({
                     location: location,
-                    aqi: Math.round(avg)
-                };
-            });
+                    aqi: Math.round(daysData[location].reduce((a, b) => a + b) / 30)
+                }));
+            }
 
             if (charts.barChart) {
                 charts.barChart.destroy();
@@ -199,7 +258,7 @@
                 data: {
                     labels: averageAQI.map(d => d.location),
                     datasets: [{
-                        label: 'Average AQI',
+                        label: timeRange === 'day' ? 'Daily Average AQI' : 'Monthly Average AQI',
                         data: averageAQI.map(d => d.aqi),
                         backgroundColor: averageAQI.map(d => getAQIColor(d.aqi))
                     }]
@@ -209,14 +268,24 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Average AQI Value'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: timeRange === 'day' ? '24-Hour Average AQI by Location' : '30-Day Average AQI by Location'
                         }
                     }
                 }
             });
         }
 
-        function createPieChart(data) {
+        function createPieChart(data, timeRange = 'day') {
             const ctx = document.getElementById('pieChart').getContext('2d');
             const aqiLevels = {
                 'Good (0-50)': 0,
@@ -227,7 +296,17 @@
                 'Hazardous (301+)': 0
             };
 
-            data.forEach(reading => {
+            // Filter data based on time range
+            const filteredData = data.filter(reading => {
+                const readingDate = new Date(reading.reading_time);
+                const now = new Date();
+                const timeDiff = now - readingDate;
+                return timeRange === 'day' 
+                    ? timeDiff <= 24 * 60 * 60 * 1000  // Last 24 hours
+                    : timeDiff <= 30 * 24 * 60 * 60 * 1000;  // Last 30 days
+            });
+
+            filteredData.forEach(reading => {
                 if (reading.aqi <= 50) aqiLevels['Good (0-50)']++;
                 else if (reading.aqi <= 100) aqiLevels['Moderate (51-100)']++;
                 else if (reading.aqi <= 150) aqiLevels['Unhealthy for Sensitive Groups (101-150)']++;
@@ -251,16 +330,27 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: timeRange === 'day' ? '24-Hour AQI Distribution' : '30-Day AQI Distribution'
+                        }
+                    }
                 }
             });
         }
 
-        function createAreaChart(data) {
+        function createAreaChart(data, timeRange = 'day') {
             const ctx = document.getElementById('areaChart').getContext('2d');
-            const timeLabels = [...new Set(data.map(item => 
-                new Date(item.reading_time).toLocaleTimeString()
-            ))].sort();
+            
+            // Format time labels based on the time range
+            const timeLabels = [...new Set(data.map(item => {
+                const date = new Date(item.reading_time);
+                return timeRange === 'day' 
+                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }))].sort();
 
             if (charts.areaChart) {
                 charts.areaChart.destroy();
@@ -273,14 +363,19 @@
                     datasets: [{
                         label: 'Maximum AQI',
                         data: timeLabels.map(time => {
-                            const timeData = data.filter(d => 
-                                new Date(d.reading_time).toLocaleTimeString() === time
-                            );
+                            const timeData = data.filter(d => {
+                                const date = new Date(d.reading_time);
+                                const formattedTime = timeRange === 'day'
+                                    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                                return formattedTime === time;
+                            });
                             return Math.max(...timeData.map(d => d.aqi));
                         }),
                         fill: true,
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)'
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        tension: timeRange === 'month' ? 0.4 : 0
                     }]
                 },
                 options: {
@@ -288,18 +383,34 @@
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Maximum AQI Value'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: timeRange === 'day' ? 'Time (24 Hours)' : 'Date (30 Days)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: timeRange === 'day' ? '24-Hour Maximum AQI Trends' : '30-Day Maximum AQI Trends'
                         }
                     }
                 }
             });
         }
 
-        function updateCharts(data) {
-            createLineChart(data);
-            createBarChart(data);
-            createPieChart(data);
-            createAreaChart(data);
+        function updateCharts(data, timeRange = 'day') {
+            createLineChart(data, timeRange);
+            createBarChart(data, timeRange);
+            createPieChart(data, timeRange);
+            createAreaChart(data, timeRange);
         }
 
         function updateData() {
@@ -314,14 +425,53 @@
         }
 
         $(document).ready(function() {
+            // Initialize data
             updateData();
 
-            $('#dataToggle').change(function() {
-                useMockData = $(this).is(':checked');
-                updateData();
+            // Handle global time range changes
+            $('#globalTimeRange').change(function() {
+                if (!useMockData) {
+                    alert('Time range selection is only available with mock data');
+                    $(this).val('day');
+                    return;
+                }
+
+                const timeRange = $(this).val();
+                const mockData = generateMockData(timeRange);
+                updateCharts(mockData, timeRange);
             });
 
-            setInterval(updateData, 60 * 1000);
+            // Handle mock data toggle
+            $('#dataToggle').change(function() {
+                useMockData = $(this).is(':checked');
+                const timeRange = $('#globalTimeRange').val();
+                
+                // Enable/disable time range selector
+                $('#globalTimeRange').prop('disabled', !useMockData);
+                
+                if (useMockData) {
+                    const mockData = generateMockData(timeRange);
+                    updateCharts(mockData, timeRange);
+                } else {
+                    $('#globalTimeRange').val('day');
+                    $.get('/get-readings', function(data) {
+                        updateCharts(Object.values(data).flat(), 'day');
+                    });
+                }
+            });
+
+            // Update every minute
+            setInterval(function() {
+                const timeRange = $('#globalTimeRange').val();
+                if (useMockData) {
+                    const mockData = generateMockData(timeRange);
+                    updateCharts(mockData, timeRange);
+                } else {
+                    $.get('/get-readings', function(data) {
+                        updateCharts(Object.values(data).flat(), 'day');
+                    });
+                }
+            }, 60 * 1000);
         });
     </script>
 </body>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\AirQualityController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
 
 // Public routes
 Route::get('/', function () {
@@ -68,6 +69,7 @@ Route::get('/test-apis', function () {
 // Data storage routes
 Route::get('/store-reading', [AirQualityController::class, 'storeReading']);
 Route::get('/get-readings', [AirQualityController::class, 'getReadings']);
+Route::get('/trigger-store-reading', [AirQualityController::class, 'triggerStoreReading'])->name('trigger.store.reading');
 
 Route::get('/charts', function () {
     return view('charts-page');
@@ -79,3 +81,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Notification Routes
+Route::middleware('auth')->group(function () {
+    Route::post('/notifications', [NotificationController::class, 'store']);
+    Route::get('/users', [NotificationController::class, 'getUsers']);
+});
+Route::get('/notifications', [NotificationController::class, 'getNotifications']);

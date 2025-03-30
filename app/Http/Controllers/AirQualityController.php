@@ -98,4 +98,15 @@ class AirQualityController extends Controller
     {
         return view('air-quality-charts');
     }
+
+    public function triggerStoreReading()
+    {
+        $response = $this->storeReading();
+        $data = $response->getData();
+
+        return view('trigger-store-reading', [
+            'message' => $data->message,
+            'readings' => $data->data
+        ]);
+    }
 } 

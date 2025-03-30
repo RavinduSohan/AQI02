@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Air Quality Index</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -185,6 +186,31 @@
 
             <!-- Charts Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Notifications Panel -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Notifications</h2>
+                        @auth
+                        <button id="createNotification" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                            Create Alert
+                        </button>
+                        @endauth
+                    </div>
+                    <div id="notificationsPanel" class="space-y-4 max-h-[300px] overflow-y-auto">
+                        <div class="text-gray-600">Loading notifications...</div>
+                    </div>
+                </div>
+
+                @auth
+                <!-- Users Panel (Only visible to logged-in users) -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                    <h2 class="text-xl font-semibold mb-4">Registered Users</h2>
+                    <div id="usersPanel" class="space-y-4 max-h-[300px] overflow-y-auto">
+                        <div class="text-gray-600">Loading users...</div>
+                    </div>
+                </div>
+                @endauth
+
                 <!-- Line Chart -->
                 <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
                     <h2 class="text-xl font-semibold mb-4">24-Hour AQI Trends</h2>
@@ -220,11 +246,42 @@
         </div>
     </div>
 
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4">Create AQI Alert</h3>
+            <form id="notificationForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" id="notificationTitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Message</label>
+                    <textarea id="notificationMessage" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Location</label>
+                    <select id="notificationLocation" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select a location</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="closeModal" class="px-4 py-2 border rounded-md hover:bg-gray-100">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Send Alert</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // Add auth check variable at the top
+        const isAuthenticated = {!! auth()->check() ? 'true' : 'false' !!};
+        
         let map;
         let markers = [];
         let charts = {};
         let useMockData = false;
+        let currentData = []; // Add this to store current data globally
 
         function getAQIColor(aqi) {
             if (aqi <= 50) return '#4CAF50';
@@ -539,15 +596,19 @@
         function updateData() {
             if (useMockData) {
                 const mockData = generateMockData();
+                currentData = mockData;
                 updateCharts(mockData);
                 updateMapAndCards(getLatestLocations(mockData));
+                updateLocationDropdown(mockData);
             } else {
-                $.get('/get-readings', function(data) {
-                    updateCharts(Object.values(data).flat());
+                $.get('/test-apis', function(data) {
+                    currentData = data;
+                    updateMapAndCards(data);
+                    updateLocationDropdown(data);
                 });
                 
-                $.get('/test-apis', function(data) {
-                    updateMapAndCards(data);
+                $.get('/get-readings', function(data) {
+                    updateCharts(Object.values(data).flat());
                 });
             }
         }
@@ -590,9 +651,78 @@
             initMap(processedData);
         }
 
+        function updateNotifications() {
+            $.get('/notifications', function(notifications) {
+                let html = '';
+                notifications.forEach(notification => {
+                    const date = new Date(notification.created_at).toLocaleString();
+                    const aqiColor = getAQIColor(notification.aqi_level);
+                    html += `
+                        <div class="border rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-semibold">${notification.title}</h3>
+                                    <p class="text-sm text-gray-600">By ${notification.user.name} • ${date}</p>
+                                </div>
+                                <div class="custom-marker" style="background-color: ${aqiColor}">${notification.aqi_level}</div>
+                            </div>
+                            <p class="mt-2">${notification.message}</p>
+                            <p class="text-sm text-gray-600 mt-1">Location: ${notification.location}</p>
+                        </div>
+                    `;
+                });
+                $('#notificationsPanel').html(html || '<p class="text-gray-600">No notifications yet.</p>');
+            });
+        }
+
+        function updateUsers() {
+            $.get('/users', function(users) {
+                let html = '';
+                users.forEach(user => {
+                    html += `
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-semibold">${user.name}</h3>
+                                    <p class="text-sm text-gray-600">${user.email}</p>
+                                </div>
+                                ${user.is_admin ? '<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Admin</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#usersPanel').html(html || '<p class="text-gray-600">No users found.</p>');
+            });
+        }
+
+        function updateLocationDropdown(data) {
+            const locations = data.map(item => item.location || item.air_quality_data?.data?.city?.name).filter(Boolean);
+            let html = '<option value="">Select a location</option>';
+            [...new Set(locations)].forEach(location => {
+                html += `<option value="${location}">${location}</option>`;
+            });
+            $('#notificationLocation').html(html);
+        }
+
         $(document).ready(function() {
-            // Initialize with real data
+            // Add CSRF token to all AJAX requests
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+
+            // Initialize data and start updates
             updateData();
+            setInterval(updateData, 60 * 1000);
+
+            // Initialize notifications
+            updateNotifications();
+            if (isAuthenticated) {
+                updateUsers();
+            }
+            setInterval(updateNotifications, 60 * 1000);
 
             // Set up data toggle
             $('#dataToggle').change(function() {
@@ -600,15 +730,69 @@
                 updateData();
             });
 
-            // Update every minute for real-time feel
-            setInterval(updateData, 60 * 1000);
-
             // Store new readings every 15 minutes
             setInterval(function() {
                 if (!useMockData) {
                     $.get('/store-reading');
                 }
             }, 15 * 60 * 1000);
+
+            // Modal handling
+            $('#createNotification').click(function() {
+                $('#notificationModal').removeClass('hidden').addClass('flex');
+            });
+
+            $('#closeModal').click(function() {
+                $('#notificationModal').removeClass('flex').addClass('hidden');
+            });
+
+            $('#notificationForm').submit(function(e) {
+                e.preventDefault();
+                const location = $('#notificationLocation').val();
+                const title = $('#notificationTitle').val();
+                const message = $('#notificationMessage').val();
+
+                // Form validation
+                if (!location || !title || !message) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                // Find the current AQI for selected location
+                let aqi;
+                if (useMockData) {
+                    const locationData = currentData.find(d => d.location === location);
+                    aqi = locationData?.aqi;
+                } else {
+                    const locationData = currentData.find(d => d.location === location);
+                    aqi = locationData?.air_quality_data?.data?.aqi;
+                }
+
+                if (!aqi) {
+                    alert('Could not determine AQI for selected location');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/notifications',
+                    method: 'POST',
+                    data: {
+                        title: title,
+                        message: message,
+                        location: location,
+                        aqi_level: aqi
+                    },
+                    success: function(response) {
+                        $('#notificationModal').removeClass('flex').addClass('hidden');
+                        $('#notificationForm')[0].reset();
+                        updateNotifications();
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || 'An error occurred';
+                        alert('Error creating notification: ' + message);
+                    }
+                });
+            });
         });
     </script>
 </body>
